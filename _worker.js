@@ -1,72 +1,86 @@
 export default {
-  async fetch(request, env) {
-    const apiKey = "GANTI_KODE_AIZA_DISINI"; 
+	async fetch(request, env) {
+		// ==========================================
+		// 1. ISI API KEY ANDA DI SINI
+		// ==========================================
+		const apiKey = "AIzaSyA4zrMJIno66WD08-1ted4H462u7jpJvAo";
+		// ==========================================
 
-    const url = new URL(request.url);
-    const userPrompt = url.searchParams.get("tanya");
-    let modelName = url.searchParams.get("model");
-    
-    if (!modelName) {
-      modelName = "gemini-1.5-flash"; 
-    }
+		const url = new URL(request.url);
+		const userPrompt = url.searchParams.get("tanya") || url.searchParams.get("text"); // Bisa pakai ?tanya= atau ?text=
 
-    if (!userPrompt) {
-      const html = `
-      <!DOCTYPE html>
-      <html lang="id">
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Gemini Multi-Model</title>
-        <style>body{font-family:sans-serif;padding:20px;} input,select,button{width:100%;padding:10px;margin-top:10px;}</style>
-      </head>
-      <body>
-        <h3>Panel Kontrol Model</h3>
-        <p>Model saat ini: <b>${modelName}</b></p>
-        <form method="GET">
-          <label>Ganti Model (Ketik Manual):</label>
-          <input type="text" name="model" value="${modelName}" placeholder="contoh: gemini-1.5-pro">
-          
-          <label>Pertanyaan:</label>
-          <input type="text" name="tanya" placeholder="Halo..." required>
-          <button type="submit">Kirim</button>
-        </form>
-      </body>
-      </html>`;
-      return new Response(html, { headers: { "content-type": "text/html" } });
-    }
+		// Ambil model dari link, kalau tidak ada pakai Flash
+		let modelName = url.searchParams.get("model");
+		if (!modelName) {
+				modelName = "gemini-1.5-flash";
+				}
 
-    try {
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-      
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: userPrompt }] }]
-        })
-      });
+			//
+			if (!userPrompt) {
+					const infoAwal = {
+						status: true,
+						message: "API Gemini Siap Digunakan",
+						cara_pakai: "/?tanya=Halo&model=gemini-1.5-flash",
+						author: "AngelaImut"
+						};
+					return new Response(JSON.stringify(infoAwal, null, 2), {
+							headers: { "content-type": "application/json; charset=utf-8" }
+							});
+					}
 
-      const data = await response.json();
+				//
+				try {
+					const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
-      if (data.error) {
-        return new Response(
-          "GAGAL MENGHUBUNGI MODEL: " + modelName + "\n\n" +
-          "PESAN GOOGLE: " + data.error.message, 
-          { headers: { "content-type": "text/plain" } }
-        );
-      }
+					const response = await fetch(apiUrl, {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({
+									contents: [{ parts: [{ text: userPrompt }] }]
+									})
+							});
 
-      if (data.candidates) {
-        const info = "[Dijawab oleh model: " + modelName + "]\n------------------\n";
-        return new Response(info + data.candidates[0].content.parts[0].text, {
-          headers: { "content-type": "text/plain" }
-        });
-      } else {
-        return new Response("Tidak ada jawaban.", { headers: { "content-type": "text/plain" } });
-      }
+					const data = await response.json();
 
-    } catch (e) {
-      return new Response("Error Sistem: " + e.message, { status: 500 });
-    }
-  }
-};
+					//
+					if (data.error) {
+							const errorJson = {
+								status: false,
+								author: "AngelaImut",
+								error_message: data.error.message,
+								model_used: modelName
+								};
+							return new Response(JSON.stringify(errorJson, null, 2), {
+									headers: { "content-type": "application/json; charset=utf-8" }
+									});
+							}
+
+						//
+						if (data.candidates) {
+								const textJawaban = data.candidates[0].content.parts[0].text;
+
+								// Ini struktur JSON mirip punya ElrayyXml
+								const finalJson = {
+									status: true,
+									author: "AngelaImut", // Bisa diganti nama Anda
+									model: modelName,
+									result: textJawaban
+									};
+
+								return new Response(JSON.stringify(finalJson, null, 2), {
+										headers: { "content-type": "application/json; charset=utf-8" }
+										});
+
+								} else {
+								return new Response(JSON.stringify({ status: false, message: "No response" }), {
+										headers: { "content-type": "application/json" }
+										});
+								}
+
+							} catch (e) {
+							return new Response(JSON.stringify({ status: false, error: e.message }), {
+									headers: { "content-type": "application/json" }, status: 500
+									});
+							}
+						}
+					};
