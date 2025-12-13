@@ -1,13 +1,15 @@
 export default {
 	async fetch(request, env) {
 		// ==========================================
-		// 1. ISI API KEY ANDA DI SINI
+		// 1. AMBIL KUNCI DARI BRANKAS CLOUDFLARE (AMAN)
 		// ==========================================
-		const apiKey = "AIzaSyA4zrMJIno66WD08-1ted4H462u7jpJvAo";
+		// Jangan tulis AIza... di sini lagi.
+		// Kita suruh kode mengambil dari settingan 'API_KEY' yang sudah Anda simpan.
+		const apiKey = env.API_KEY;
 		// ==========================================
 
 		const url = new URL(request.url);
-		const userPrompt = url.searchParams.get("tanya") || url.searchParams.get("text"); // Bisa pakai ?tanya= atau ?text=
+		const userPrompt = url.searchParams.get("tanya") || url.searchParams.get("text");
 
 		// Ambil model dari link, kalau tidak ada pakai Flash
 		let modelName = url.searchParams.get("model");
@@ -59,10 +61,9 @@ export default {
 						if (data.candidates) {
 								const textJawaban = data.candidates[0].content.parts[0].text;
 
-								// Ini struktur JSON mirip punya ElrayyXml
 								const finalJson = {
 									status: true,
-									author: "AngelaImut", // Bisa diganti nama Anda
+									author: "AngelaImut",
 									model: modelName,
 									result: textJawaban
 									};
