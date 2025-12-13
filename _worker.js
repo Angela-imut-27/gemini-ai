@@ -14,7 +14,7 @@ export default {
 		// Ambil model dari link, kalau tidak ada pakai Flash
 		let modelName = url.searchParams.get("model");
 		if (!modelName) {
-				modelName = "gemini-1.5-flash";
+				modelName = "gemma-3-4b-it";
 				}
 
 			//
@@ -22,7 +22,7 @@ export default {
 					const infoAwal = {
 						status: true,
 						message: "API Gemini Siap Digunakan",
-						cara_pakai: "/?tanya=Halo&model=gemini-1.5-flash",
+						cara_pakai: "/?tanya=Halo&model=gemma-3-4b-it",
 						author: "AngelaImut"
 						};
 					return new Response(JSON.stringify(infoAwal, null, 2), {
